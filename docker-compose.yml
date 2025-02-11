@@ -1,0 +1,7 @@
+services:
+  exec_lab:
+    build: .
+    volumes:
+      - ./workspace:/workspace
+    stdin_open: true
+    tty: true

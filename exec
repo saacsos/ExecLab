@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# ExecLab CLI: Shortens docker-compose commands
+PROJECT_NAME="ExecLab"
+
+case "$1" in
+    up)
+        echo "🚀 Starting $PROJECT_NAME..."
+        docker-compose up -d
+        ;;
+    down)
+        echo "🛑 Stopping $PROJECT_NAME..."
+        docker-compose down
+        ;;
+    build)
+        echo "🔨 Building $PROJECT_NAME..."
+        docker-compose build
+        ;;
+    run)
+        if [ -z "$2" ] || [ -z "$3" ]; then
+            echo "❌ Usage: exec run <language> <filename> [input_file]"
+            exit 1
+        fi
+        echo "▶️ Running $2 ($3) inside $PROJECT_NAME..."
+        docker-compose run --rm exec_lab run_code "$2" "$3" "$4"
+        ;;
+    *)
+        echo "⚙️ ExecLab CLI"
+        echo "Usage: exec [command]"
+        echo "Commands:"
+        echo "  up        Start the system"
+        echo "  down      Stop the system"
+        echo "  build     Build the system"
+        echo "  run       Run a file: exec run <language> <filename> [input_file]"
+        ;;
+esac

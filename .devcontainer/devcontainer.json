@@ -1,0 +1,16 @@
+{
+    "name": "ExecLab",
+    "dockerComposeFile": "../docker-compose.yml",
+    "service": "exec_lab",
+    "workspaceFolder": "/workspace",
+    "extensions": [
+        "ms-vscode.cpptools",
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "esbenp.prettier-vscode"
+    ],
+    "settings": {
+        "terminal.integrated.defaultProfile.linux": "/bin/bash"
+    },
+    "remoteUser": "root"
+}
