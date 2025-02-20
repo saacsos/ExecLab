@@ -5,3 +5,7 @@ services:
       - ./workspace:/workspace
     stdin_open: true
     tty: true
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    command: tail -f /dev/null

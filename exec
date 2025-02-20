@@ -7,6 +7,12 @@ case "$1" in
     up)
         echo "🚀 Starting $PROJECT_NAME..."
         docker-compose up -d
+
+        # Debug isolate configuration
+        echo "Checking isolate configuration..."
+
+        echo "Initializing isolate..."
+        docker-compose exec exec_lab bash -c "isolate --verbose --init --box-id=0"
         ;;
     down)
         echo "🛑 Stopping $PROJECT_NAME..."
@@ -22,7 +28,18 @@ case "$1" in
             exit 1
         fi
         echo "▶️ Running $2 ($3) inside $PROJECT_NAME..."
-        docker-compose run --rm exec_lab run_code "$2" "$3" "$4"
+        if [ -z "$4" ]; then
+            docker-compose exec -w /workspace exec_lab run_code "$2" "$3"
+        else
+            docker-compose exec -w /workspace exec_lab run_code "$2" "$3" "$4"
+        fi
+        ;;
+    cmd)
+        if [ -z "$2" ]; then
+            echo "❌ Usage: exec cmd \"<command>\""
+            exit 1
+        fi
+        docker-compose exec exec_lab bash -c "$2"
         ;;
     *)
         echo "⚙️ ExecLab CLI"
@@ -32,5 +49,6 @@ case "$1" in
         echo "  down      Stop the system"
         echo "  build     Build the system"
         echo "  run       Run a file: exec run <language> <filename> [input_file]"
+        echo "  cmd       Exec bash command: exec cmd \"<command>\""
         ;;
 esac
