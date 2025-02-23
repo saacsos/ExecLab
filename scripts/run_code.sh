@@ -18,8 +18,7 @@ BASE_DIRS="--dir=/usr/bin=/usr/bin:rw \
            --dir=/usr/lib=/usr/lib:rw \
            --dir=/lib=/lib:rw"
 
-NODE_DIRS="--dir=/lib/aarch64-linux-gnu=/lib/aarch64-linux-gnu:rw \
-           --dir=/usr/lib/aarch64-linux-gnu=/usr/lib/aarch64-linux-gnu:rw"
+EXTRA_DIRS=""
 
 case "$LANGUAGE" in
     c)
@@ -67,54 +66,83 @@ case "$LANGUAGE" in
         MEM_LIMIT=256000
         PROCESS_LIMIT=1
         ;;
-    node)
+    javascript|js)
         cp "$FILE" "$BOX_PATH/main.js"
-        EXECUTE_CMD="/usr/bin/node --max-old-space-size=128 main.js"
-        EXTRA_DIRS="$NODE_DIRS"
+        mkdir -p "$BOX_PATH/usr/local/bun"
+        cp -r /usr/local/bun/* "$BOX_PATH/usr/local/bun/"
+        EXECUTE_CMD="/usr/local/bun/bin/bun run main.js"
         MEM_LIMIT=512000
-        PROCESS_LIMIT=32
+        PROCESS_LIMIT=50
+        TIME_LIMIT=5.0
+        WALL_TIME=10.0
+        EXTRA_DIRS="--dir=/usr/local/bun=/usr/local/bun:rw \
+            --dir=/lib/aarch64-linux-gnu=/lib/aarch64-linux-gnu:rw \
+            --dir=/proc=/proc:rw \
+            --dir=/dev=/dev:rw \
+            --dir=/lib/ld-linux-aarch64.so.1=/lib/ld-linux-aarch64.so.1:rw"
+        ;;
+    typescript|ts)
+        cp "$FILE" "$BOX_PATH/main.ts"
+        mkdir -p "$BOX_PATH/usr/local/bun"
+        cp -r /usr/local/bun/* "$BOX_PATH/usr/local/bun/"
+        EXECUTE_CMD="/usr/local/bun/bin/bun run main.ts"
+        MEM_LIMIT=512000
+        PROCESS_LIMIT=50
+        TIME_LIMIT=5.0
+        WALL_TIME=10.0
+        EXTRA_DIRS="--dir=/usr/local/bun=/usr/local/bun:rw \
+            --dir=/lib/aarch64-linux-gnu=/lib/aarch64-linux-gnu:rw \
+            --dir=/proc=/proc:rw \
+            --dir=/dev=/dev:rw \
+            --dir=/lib/ld-linux-aarch64.so.1=/lib/ld-linux-aarch64.so.1:rw"
         ;;
     *)
         echo "Unsupported language!"
-        echo "Supported languages: c, cpp, python, node"
+        echo "Supported languages: c, cpp, python, javascript/js, typescript/ts"
         isolate --cleanup --box-id="$BOX_ID"
         rm -f "$META_FILE"
         exit 1
         ;;
 esac
 
+DIRS="$BASE_DIRS $EXTRA_DIRS"
+
 if [ -n "$INPUT_FILE" ]; then
     cp "$INPUT_FILE" "$BOX_PATH/input.txt"
     
     isolate --run --box-id="$BOX_ID" \
-            $BASE_DIRS \
-            $EXTRA_DIRS \
+            $DIRS \
             --meta="$META_FILE" \
-            --time=1.0 \
-            --wall-time=2.0 \
+            --time=${TIME_LIMIT:-1.0} \
+            --wall-time=${WALL_TIME:-2.0} \
             --mem=$MEM_LIMIT \
+            --fsize=32768 \
             --stack=262144 \
             --processes=$PROCESS_LIMIT \
             --share-net \
             --stderr-to-stdout \
-            --env=PATH=/usr/bin:/bin \
+            --env=PATH=/usr/bin:/bin:/usr/local/bun/bin \
+            --env=BUN_INSTALL=/usr/local/bun \
             --stdin=input.txt \
+            --tty \
             -- $EXECUTE_CMD 2>&1
     
     EXIT_CODE=$?
 else
     isolate --run --box-id="$BOX_ID" \
-            $BASE_DIRS \
-            $EXTRA_DIRS \
+            $DIRS \
             --meta="$META_FILE" \
-            --time=1.0 \
-            --wall-time=2.0 \
+            --time=${TIME_LIMIT:-1.0} \
+            --wall-time=${WALL_TIME:-2.0} \
             --mem=$MEM_LIMIT \
+            --fsize=32768 \
             --stack=262144 \
             --processes=$PROCESS_LIMIT \
             --share-net \
             --stderr-to-stdout \
-            --env=PATH=/usr/bin:/bin \
+            --env=PATH=/usr/bin:/bin:/usr/local/bun/bin \
+            --env=BUN_INSTALL=/usr/local/bun \
+            --tty \
             -- $EXECUTE_CMD 2>&1
     
     EXIT_CODE=$?

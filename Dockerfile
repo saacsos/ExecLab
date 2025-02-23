@@ -23,13 +23,23 @@ RUN apt update && apt install -y \
     nodejs \
     time
 
+RUN apt-get update && apt-get install -y curl unzip
+
 RUN apt install -y \
     binutils \
     libstdc++6
 RUN apt install -y binutils-aarch64-linux-gnu
 
 RUN apt install -y libcap2-bin
+RUN apt install -y build-essential
 RUN rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local/bun bash
+ENV PATH="/usr/local/bun/bin:${PATH}"
+
+RUN bun --version && \
+    chmod -R 755 /usr/local/bun
+RUN mkdir -p /tmp/bun-cache && chmod -R 777 /tmp/bun-cache
 
 # Create runner user and group
 RUN groupadd -g 60000 runner
